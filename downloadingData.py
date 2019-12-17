@@ -215,10 +215,9 @@ def getHousesData(loopLimit=100,browser=browser):
     random.shuffle(l_urls) # useful if threading
     #print(len(l_urls))
     if len(l_urls)<loopLimit: loopLimit = len(l_urls)
-    fails = 0
     for url in l_urls: 
         houseId = getHouseId(url)
-        if collection.find({"id":houseId}).count_documents()==0:
+        if collection.find({"id":houseId}).count()==0:
             print(".",end="")
             p = loadPage("https://www.idealista.com"+url,browser)
             remove_it = ("ya no está publicado en idealista" in p) or ("no hay ningún anuncio con ese código" in p)
@@ -233,15 +232,12 @@ def getHousesData(loopLimit=100,browser=browser):
                 saveToMongo(url,data)
             else:
                 print("error")
+                
                 return False
             pause()            
             loopLimit -= 1        
             if loopLimit<1: break
-        else:
-            fails += 1
-            if fails>100:
-                print("too many fails")
-                return False
+   
     print("done") 
     return True
         
@@ -250,7 +246,7 @@ def getHousesData(loopLimit=100,browser=browser):
 # In[10]:
 
 
-from threading import Thread
+from threading import Thread,currentThread
 t=[]
 
 
@@ -258,8 +254,9 @@ t=[]
 
 
 def doIt():
+    t = currentThread()
     browser = newBrowser()
-    while getHousesData(25,browser):        
+    while getHousesData(25,browser) and not getattr(t,"kill",False):        
         time.sleep(300)
     browser.close()
 
