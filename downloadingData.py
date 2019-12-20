@@ -217,8 +217,7 @@ def getHousesData(loopLimit=100,browser=browser):
     if len(l_urls)<loopLimit: loopLimit = len(l_urls)
     for url in l_urls: 
         houseId = getHouseId(url)
-        if collection.find({"id":houseId}).count()==0:
-            print(".",end="")
+        if collection.find({"id":houseId}).count()==0:            
             p = loadPage("https://www.idealista.com"+url,browser)
             remove_it = ("ya no está publicado en idealista" in p) or ("no hay ningún anuncio con ese código" in p)
             if remove_it:
@@ -228,6 +227,7 @@ def getHousesData(loopLimit=100,browser=browser):
                 continue
             t = loadPageTree(p)
             data = getHouseData(t)
+            print(".",end="")
             if data.get("price"):
                 saveToMongo(url,data)
             else:
@@ -284,6 +284,14 @@ def checkMongo():
     print(urls.find({"removed":True}).count())
     print(collection.count())
 
+def check():
+    l_urls = [getHouseId(url["url"]) for url in urls.find() if "removed" not in url]
+    to_do = [ doc for doc in collection.find() if doc["id"] not in l_urls]
+    print(len(to_do))
+    return to_do
 
+
+            
+    
 
 
